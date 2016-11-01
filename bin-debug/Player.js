@@ -1,25 +1,32 @@
-var VELOCITY = 0.2;
+var VELOCITY = 2; //x，y方向的帧速率都是2px/s
+var PICTURECHANGERATE = 15; //1/4S改变一次图片和位置
 var oneFaceNumber = 4;
 var faceNumber = 4;
 var RIGHT = 0;
 var DOWN = 1;
 var LEFT = 2;
 var UP = 3;
+var offSetOfPlayer = 32; //人物相对一个格子的位移偏移量
 var MoveState = (function () {
-    function MoveState(player, TargetX, TargetY) {
+    //constructor(player:Player,TargetX:number,TargetY:number){
+    function MoveState(player, path) {
+        this.targetTile = 0;
         this.player = player;
-        this.CurrentPicture = 0;
+        this.currentPicture = 0;
         this.count = 0;
-        this.TargetX = TargetX;
-        this.TargetY = TargetY;
+        // this.TargetX=TargetX;
+        // this.TargetY=TargetY;
+        this.path = path;
+        this.targetX = path[path.length - 1].x;
+        this.targetY = path[path.length - 1].y;
         var temp = ["r1_png", "r2_png", "r3_png", "r4_png", "d1_png", "d2_png", "d3_png", "d4_png", "l1_png", "l2_png", "l3_png", "l4_png", "u1_png", "u2_png", "u3_png", "u4_png"];
-        this.MovePicture = new Array();
+        this.movePicture = new Array();
         for (var i = 0; i < faceNumber; i++) {
-            this.MovePicture[i] = new Array();
+            this.movePicture[i] = new Array();
         }
         for (var i = 0, count = 0; i < faceNumber; i++) {
             for (var j = 0; j < oneFaceNumber; j++) {
-                this.MovePicture[i][j] = RES.getRes(temp[count]);
+                this.movePicture[i][j] = RES.getRes(temp[count]);
                 count++;
             }
         }
@@ -27,13 +34,12 @@ var MoveState = (function () {
     }
     var d = __define,c=MoveState,p=c.prototype;
     p.OnEnter = function () {
-        var _this = this;
-        var dx = this.TargetX - this.player.x;
-        var dy = this.TargetY - this.player.y;
-        var distance = Math.sqrt(dx * dx + dy * dy);
-        egret.Tween.get(this.player).to({ x: this.TargetX, y: this.TargetY }, distance / this.player.volocity).call(function () {
-            _this.player.Macine.ChangeState(new IdleState(_this.player));
-        }, this);
+        var dx = this.targetX - this.player.x;
+        var dy = this.targetY - this.player.y;
+        // let distance=Math.sqrt(dx*dx+dy*dy);
+        // egret.Tween.get(this.player).to({x:this.TargetX,y:this.TargetY},distance/this.player.volocity).call(()=>{
+        //     this.player.Macine.ChangeState(new IdleState(this.player));
+        // },this);
         if (dy >= 0) {
             if (Math.abs(dy) >= Math.abs(dx)) {
                 this.targetFace = this.currentFace;
@@ -63,17 +69,40 @@ var MoveState = (function () {
     };
     p.enter = function () {
         this.count++;
-        if (this.count % 15 == 0) {
-            this.CurrentPicture++;
-            this.CurrentPicture %= this.MovePicture.length;
-            this.player.MyPlayer.texture = this.MovePicture[this.targetFace][this.CurrentPicture];
+        // console.log("当前人物位置：("+ this.player.x+","+ this.player.y +")");
+        // console.log("当前目标位置：("+this.path[this.targetTile].x+","+this.path[this.targetTile].y+")");
+        if (this.count % PICTURECHANGERATE == 0) {
+            this.currentPicture++;
+            this.currentPicture %= this.movePicture.length;
+            this.player.MyPlayer.texture = this.movePicture[this.targetFace][this.currentPicture];
             this.count = 0;
+        }
+        if (this.player.x < this.path[this.targetTile].x) {
+            this.player.x += VELOCITY;
+        }
+        else if (this.player.x > this.path[this.targetTile].x) {
+            this.player.x -= VELOCITY;
+        }
+        if (this.player.y < this.path[this.targetTile].y) {
+            this.player.y += VELOCITY;
+        }
+        else if (this.player.y > this.path[this.targetTile].y) {
+            this.player.y -= VELOCITY;
+        }
+        // console.log("当前帧渲染后人物位置：("+this.player.x+","+this.player.y+")");
+        if (this.player.x == this.path[this.targetTile].x && this.player.y == this.path[this.targetTile].y) {
+            if (this.targetTile == this.path.length - 1) {
+                this.player.Macine.ChangeState(new IdleState(this.player));
+            }
+            else {
+                this.targetTile++;
+            }
         }
         return true;
     };
     p.OnExit = function () {
         egret.stopTick(this.enter, this);
-        egret.Tween.removeTweens(this.player);
+        // egret.Tween.removeTweens(this.player);
         this.count = 0;
     };
     return MoveState;
@@ -96,7 +125,7 @@ var IdleState = (function () {
     };
     p.enter = function () {
         this.count++;
-        if (this.count % 30 == 0) {
+        if (this.count % PICTURECHANGERATE == 0) {
             this.CurrentPicture++;
             this.CurrentPicture %= this.IdlePicture.length;
             this.player.MyPlayer.texture = this.IdlePicture[this.CurrentPicture];
@@ -106,7 +135,7 @@ var IdleState = (function () {
     };
     p.OnExit = function () {
         egret.stopTick(this.enter, this);
-        egret.Tween.removeTweens(this.player);
+        // egret.Tween.removeTweens(this.player);
         this.count = 0;
     };
     return IdleState;
@@ -137,8 +166,8 @@ var Player = (function (_super) {
         this.addChild(this.MyPlayer);
         this.width = this.MyPlayer.width;
         this.height = this.MyPlayer.height;
-        this.MyPlayer.x = -25;
-        this.MyPlayer.y = -80;
+        this.MyPlayer.x = 0;
+        this.MyPlayer.y = -50;
     }
     var d = __define,c=Player,p=c.prototype;
     p.createBitmapByName = function (name) {

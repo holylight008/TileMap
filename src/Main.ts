@@ -126,12 +126,11 @@ class Main extends egret.DisplayObjectContainer {
         this.addChild(newMap);
 
         var Character:Player=new Player();
-        Character.x=1;
-        Character.y=1;
+        Character.x=0;
+        Character.y=0;
         this.addChild(Character);
 
         this.addEventListener(egret.TouchEvent.TOUCH_TAP,(evt:egret.TouchEvent)=>{
-            Character.Macine.ChangeState(new MoveState(Character, evt.stageX, evt.stageY));
             let startTile: tile = new tile();
             startTile.x = Math.floor(Character.x / ONETILESIZE);
             startTile.y = Math.floor(Character.y / ONETILESIZE);
@@ -139,7 +138,11 @@ class Main extends egret.DisplayObjectContainer {
             endTile.x = Math.floor(evt.stageX / ONETILESIZE);
             endTile.y = Math.floor(evt.stageY / ONETILESIZE);
             console.log("start:("+startTile.x+","+startTile.y+")"+"end:("+endTile.x+","+endTile.y+")");
-            newMap.findWay(startTile,endTile);
+            if(newMap.findWay(startTile,endTile)){
+                let path:tile[]=newMap.getPath();
+                Character.Macine.ChangeState(new MoveState(Character,path));
+            }
+                
         }, this)
 
     }

@@ -1,51 +1,60 @@
-let VELOCITY:number=0.2;
+let VELOCITY:number=2;//x，y方向的帧速率都是2px/s
+let PICTURECHANGERATE=15;//1/4S改变一次图片和位置
 let oneFaceNumber=4;
 let faceNumber=4;
 let RIGHT=0;
 let DOWN=1;
 let LEFT=2;
 let UP=3;
+let offSetOfPlayer=32;//人物相对一个格子的位移偏移量
+
 interface State{
     OnEnter():void;
     OnExit():void;
 }
 
 class MoveState implements State{
-    private MovePicture:egret.Texture[][];
+    private movePicture:egret.Texture[][];
     private currentFace:number;
     private player:Player;
-    private CurrentPicture:number;
-    private count:number;
-    private TargetX:number;
-    private TargetY:number;
+    private currentPicture:number;
+    private targetTile:number;//路径数组下标
+    private count:number;//帧计时器
+    private targetX:number;
+    private targetY:number;
     private targetFace:number;
-    constructor(player:Player,TargetX:number,TargetY:number){
-        this.player=player;
-        this.CurrentPicture=0;
-        this.count=0;
-        this.TargetX=TargetX;
-        this.TargetY=TargetY;
-        let temp=["r1_png","r2_png","r3_png","r4_png","d1_png","d2_png","d3_png","d4_png","l1_png","l2_png","l3_png","l4_png","u1_png","u2_png","u3_png","u4_png"];
-        this.MovePicture=new Array();
-        for(let i=0;i<faceNumber;i++){
-            this.MovePicture[i]=new Array();
+    private path:tile[];
+    //constructor(player:Player,TargetX:number,TargetY:number){
+    constructor(player: Player, path: tile[]) {
+        this.targetTile=0;
+        this.player = player;
+        this.currentPicture = 0;
+        this.count = 0;
+        // this.TargetX=TargetX;
+        // this.TargetY=TargetY;
+        this.path = path;
+        this.targetX = path[path.length - 1].x;
+        this.targetY = path[path.length - 1].y;
+        let temp = ["r1_png", "r2_png", "r3_png", "r4_png", "d1_png", "d2_png", "d3_png", "d4_png", "l1_png", "l2_png", "l3_png", "l4_png", "u1_png", "u2_png", "u3_png", "u4_png"];
+        this.movePicture = new Array();
+        for (let i = 0; i < faceNumber; i++) {
+            this.movePicture[i] = new Array();
         }
-        for(let i=0,count=0;i<faceNumber;i++){
-            for(let j=0;j<oneFaceNumber;j++){
-                this.MovePicture[i][j]=RES.getRes(temp[count]);
+        for (let i = 0, count = 0; i < faceNumber; i++) {
+            for (let j = 0; j < oneFaceNumber; j++) {
+                this.movePicture[i][j] = RES.getRes(temp[count]);
                 count++;
             }
         }
-        this.currentFace=DOWN;
+        this.currentFace = DOWN;
     }
     OnEnter():void{
-        let dx=this.TargetX-this.player.x;
-        let dy=this.TargetY-this.player.y;
-        let distance=Math.sqrt(dx*dx+dy*dy);
-        egret.Tween.get(this.player).to({x:this.TargetX,y:this.TargetY},distance/this.player.volocity).call(()=>{
-            this.player.Macine.ChangeState(new IdleState(this.player));
-        },this);
-        
+        let dx=this.targetX-this.player.x;
+        let dy=this.targetY-this.player.y;
+        // let distance=Math.sqrt(dx*dx+dy*dy);
+        // egret.Tween.get(this.player).to({x:this.TargetX,y:this.TargetY},distance/this.player.volocity).call(()=>{
+        //     this.player.Macine.ChangeState(new IdleState(this.player));
+        // },this);
         if(dy>=0){
             if(Math.abs(dy)>=Math.abs(dx)){
                 this.targetFace=this.currentFace;
@@ -70,17 +79,37 @@ class MoveState implements State{
     }
     private enter():boolean{
         this.count++;
-        if(this.count%15==0){
-            this.CurrentPicture++;
-            this.CurrentPicture%=this.MovePicture.length;
-            this.player.MyPlayer.texture=this.MovePicture[this.targetFace][this.CurrentPicture];
+        // console.log("当前人物位置：("+ this.player.x+","+ this.player.y +")");
+        // console.log("当前目标位置：("+this.path[this.targetTile].x+","+this.path[this.targetTile].y+")");
+        if(this.count%PICTURECHANGERATE==0){
+            this.currentPicture++;
+            this.currentPicture%=this.movePicture.length;
+            this.player.MyPlayer.texture=this.movePicture[this.targetFace][this.currentPicture];
             this.count=0;
+        }
+        if (this.player.x < this.path[this.targetTile].x) {
+            this.player.x += VELOCITY;
+        }else if(this.player.x > this.path[this.targetTile].x) {
+            this.player.x -= VELOCITY;
+        }
+        if ( this.player.y < this.path[this.targetTile].y) {
+            this.player.y += VELOCITY;
+        }else if(this.player.y > this.path[this.targetTile].y){
+            this.player.y -= VELOCITY;
+        }
+        // console.log("当前帧渲染后人物位置：("+this.player.x+","+this.player.y+")");
+        if ( this.player.x == this.path[this.targetTile].x && this.player.y == this.path[this.targetTile].y) {
+            if (this.targetTile == this.path.length - 1) {
+                this.player.Macine.ChangeState(new IdleState(this.player));
+            } else {
+                this.targetTile++;
+            }
         }
         return true;
     }
     OnExit():void{
         egret.stopTick(this.enter,this);
-        egret.Tween.removeTweens(this.player);
+        // egret.Tween.removeTweens(this.player);
         this.count=0;
     }
 }
@@ -107,7 +136,7 @@ class IdleState implements State{
     }
     private enter():boolean{
         this.count++;
-        if(this.count%30==0){
+        if(this.count%PICTURECHANGERATE==0){
             this.CurrentPicture++;
             this.CurrentPicture%=this.IdlePicture.length;
             this.player.MyPlayer.texture=this.IdlePicture[this.CurrentPicture];
@@ -117,7 +146,7 @@ class IdleState implements State{
     }
     OnExit():void{
         egret.stopTick(this.enter,this);
-        egret.Tween.removeTweens(this.player);
+        // egret.Tween.removeTweens(this.player);
         this.count=0;
     }
 }
@@ -151,8 +180,8 @@ class Player extends egret.DisplayObjectContainer{
         this.addChild(this.MyPlayer);
         this.width=this.MyPlayer.width;
         this.height=this.MyPlayer.height;
-        this.MyPlayer.x=-25;
-        this.MyPlayer.y=-80;
+        this.MyPlayer.x=0;
+        this.MyPlayer.y=-50;
     }
     public Macine:StateMacine;
     public MyPlayer:egret.Bitmap;

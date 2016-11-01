@@ -109,11 +109,10 @@ var Main = (function (_super) {
         newMap.y = 0;
         this.addChild(newMap);
         var Character = new Player();
-        Character.x = 1;
-        Character.y = 1;
+        Character.x = 0;
+        Character.y = 0;
         this.addChild(Character);
         this.addEventListener(egret.TouchEvent.TOUCH_TAP, function (evt) {
-            Character.Macine.ChangeState(new MoveState(Character, evt.stageX, evt.stageY));
             var startTile = new tile();
             startTile.x = Math.floor(Character.x / ONETILESIZE);
             startTile.y = Math.floor(Character.y / ONETILESIZE);
@@ -121,7 +120,10 @@ var Main = (function (_super) {
             endTile.x = Math.floor(evt.stageX / ONETILESIZE);
             endTile.y = Math.floor(evt.stageY / ONETILESIZE);
             console.log("start:(" + startTile.x + "," + startTile.y + ")" + "end:(" + endTile.x + "," + endTile.y + ")");
-            newMap.findWay(startTile, endTile);
+            if (newMap.findWay(startTile, endTile)) {
+                var path = newMap.getPath();
+                Character.Macine.ChangeState(new MoveState(Character, path));
+            }
         }, this);
     };
     return Main;
