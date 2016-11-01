@@ -112,9 +112,11 @@ let mapJason=[
 
 let ROW=10;
 let LIST=10;
-let STONEPROBBILITY=0.3;
+let STONEPROBBILITY=0.2;
 let ONETILESIZE=64;
 let manhadun=0;
+let ojilide=1;
+let duijiaoxian=2;
 
 
 class tile extends egret.DisplayObjectContainer{
@@ -189,8 +191,16 @@ class MainMap extends egret.DisplayObjectContainer{
 
 
     private estimulate(start:tile,end:tile,method:number):number{
-        if (method == 0)
+        if (method == 0){
             return Math.abs(end.x / ONETILESIZE - start.x / ONETILESIZE) + Math.abs(end.y / ONETILESIZE - start.y / ONETILESIZE);
+        }
+        if (method == 1) {
+            return Math.sqrt((start.x - end.x) * (start.x - end.x) + (start.y - end.y) * (start.y - end.y));
+        }
+        if(method==2){
+            return  Math.sqrt((start.x - Math.abs(end.x-start.x)/2) * (start.x - Math.abs(end.x-start.x)/2) + (start.y - end.y/2) * (start.y - end.y/2))+Math.abs(end.x-start.x)/2;
+        }
+            
     }
     private sortWeight(a:tile,b:tile){
         return a.weight-b.weight;
@@ -258,7 +268,7 @@ class MainMap extends egret.DisplayObjectContainer{
 
                     let testTile: tile = this.myMap[(j / ONETILESIZE) * ROW + i / ONETILESIZE];
 
-                    console.log("当前判断砖块坐标：" + "(" + i / ONETILESIZE + "," + j / ONETILESIZE + ")");
+                    // console.log("当前判断砖块坐标：" + "(" + i / ONETILESIZE + "," + j / ONETILESIZE + ")");
                     //判断是否为当前地面
                     if (testTile==currentTile) {
                         continue;
@@ -279,8 +289,8 @@ class MainMap extends egret.DisplayObjectContainer{
                         //计算testtile权值
                         else if (openList.indexOf(testTile) == -1 && closedList.indexOf(testTile) == -1) {
                             tempOpenList.push(testTile);
-                            console.log("openlist +"+"("+testTile.x+","+testTile.y+")");
-                            testTile.weight = currentTile.weight + dg + this.estimulate(testTile, endTile, manhadun);
+                            // console.log("openlist +"+"("+testTile.x+","+testTile.y+")");
+                            testTile.weight = currentTile.weight + dg + this.estimulate(testTile, endTile, ojilide);
                             testTile.preTile = currentTile;
                         }
                     }
@@ -292,7 +302,7 @@ class MainMap extends egret.DisplayObjectContainer{
                     openList[i] = openList[i + 1];
                 }
                 openList.pop();
-                console.log("openlist -"+"("+currentTile.x+","+currentTile.y+")");
+                // console.log("openlist -"+"("+currentTile.x+","+currentTile.y+")");
             }
             if (tempOpenList.length != 0) {
                 tempOpenList.sort(this.sortWeight);

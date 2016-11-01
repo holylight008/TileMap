@@ -6,7 +6,8 @@ let RIGHT=0;
 let DOWN=1;
 let LEFT=2;
 let UP=3;
-let offSetOfPlayer=32;//人物相对一个格子的位移偏移量
+let offSetOfPlayer=100;//人物相对一个格子的位移偏移量
+
 
 interface State{
     OnEnter():void;
@@ -55,25 +56,9 @@ class MoveState implements State{
         // egret.Tween.get(this.player).to({x:this.TargetX,y:this.TargetY},distance/this.player.volocity).call(()=>{
         //     this.player.Macine.ChangeState(new IdleState(this.player));
         // },this);
-        if(dy>=0){
-            if(Math.abs(dy)>=Math.abs(dx)){
-                this.targetFace=this.currentFace;
-            }else if(dx>=0){
-                this.targetFace=(this.currentFace+faceNumber-1)%faceNumber;
-            }else{
-                //console.log("!!!")
-                this.targetFace=(this.currentFace+1)%faceNumber;
-            }
-        }else{
-            if(Math.abs(dy)>=Math.abs(dx)){
-                this.targetFace=(this.currentFace+2)%faceNumber;
-            }else if(dx>=0){
-                this.targetFace=(this.currentFace+faceNumber-1)%faceNumber;
-            }if(dx<0){
-                this.targetFace=(this.currentFace+1)%faceNumber;
-            }
-        }
+        this.chooseFace(dx,dy);
         this.currentFace=this.targetFace;
+        console.log("第一次选择以后朝向："+this.currentFace);
         //console.log("("+this.player.x+","+this.player.y+")"+"dy="+dy+"  dx="+dx+"  targetFace="+this.targetFace);
         egret.startTick(this.enter,this);
     }
@@ -87,6 +72,7 @@ class MoveState implements State{
             this.player.MyPlayer.texture=this.movePicture[this.targetFace][this.currentPicture];
             this.count=0;
         }
+        
         if (this.player.x < this.path[this.targetTile].x) {
             this.player.x += VELOCITY;
         }else if(this.player.x > this.path[this.targetTile].x) {
@@ -102,7 +88,13 @@ class MoveState implements State{
             if (this.targetTile == this.path.length - 1) {
                 this.player.Macine.ChangeState(new IdleState(this.player));
             } else {
+                console.log("到达第"+this.targetTile+"块转时的朝向"+this.currentFace);
                 this.targetTile++;
+                let dx = this.path[this.targetTile].x - this.player.x;
+                let dy = this.path[this.targetTile].y - this.player.y;
+                this.chooseFace(dx, dy);
+                this.currentFace=this.targetFace;
+                console.log("目标为第"+this.targetTile+"块转时的朝向"+this.currentFace);
             }
         }
         return true;
@@ -111,6 +103,25 @@ class MoveState implements State{
         egret.stopTick(this.enter,this);
         // egret.Tween.removeTweens(this.player);
         this.count=0;
+    }
+    private chooseFace(dx: number, dy: number) {
+        if (dy >= 0) {
+            if (Math.abs(dy) >= Math.abs(dx)) {
+                this.targetFace = 1;
+            } else if (dx > 0) {
+                this.targetFace = 0;
+            } else {
+                this.targetFace = 2;
+            }
+        } else {
+            if (Math.abs(dy) >= Math.abs(dx)) {
+                this.targetFace = 3;
+            } else if (dx >= 0) {
+                this.targetFace = 0;
+            } if (dx < 0) {
+                this.targetFace = 2;
+            }
+        }
     }
 }
 
@@ -181,7 +192,7 @@ class Player extends egret.DisplayObjectContainer{
         this.width=this.MyPlayer.width;
         this.height=this.MyPlayer.height;
         this.MyPlayer.x=0;
-        this.MyPlayer.y=-50;
+        this.MyPlayer.y=-40;
     }
     public Macine:StateMacine;
     public MyPlayer:egret.Bitmap;

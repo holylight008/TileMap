@@ -1,7 +1,7 @@
 {
 	"groups": [
 		{
-			"keys": "description_json,bj_jpg,r2_png,r3_png,r4_png,r1_png,i1_png,i2_png,i3_png,i4_png,i5_png,l1_png,l2_png,l3_png,l4_png,d3_png,d4_png,d1_png,d2_png,u1_png,u2_png,u3_png,u4_png,wall_jpg,path_jpg",
+			"keys": "description_json,bj_jpg,r2_png,r3_png,r4_png,r1_png,l1_png,l2_png,l3_png,l4_png,d3_png,d4_png,d1_png,d2_png,u1_png,u2_png,u3_png,u4_png,wall_jpg,path_jpg,i2_png,i3_png,i4_png,i5_png,i1_png",
 			"name": "preload"
 		}
 	],
@@ -35,31 +35,6 @@
 			"name": "r1_png",
 			"type": "image",
 			"url": "assets/r1.png"
-		},
-		{
-			"name": "i1_png",
-			"type": "image",
-			"url": "assets/i1.png"
-		},
-		{
-			"name": "i2_png",
-			"type": "image",
-			"url": "assets/i2.png"
-		},
-		{
-			"name": "i3_png",
-			"type": "image",
-			"url": "assets/i3.png"
-		},
-		{
-			"name": "i4_png",
-			"type": "image",
-			"url": "assets/i4.png"
-		},
-		{
-			"name": "i5_png",
-			"type": "image",
-			"url": "assets/i5.png"
 		},
 		{
 			"name": "l1_png",
@@ -130,6 +105,31 @@
 			"name": "path_jpg",
 			"type": "image",
 			"url": "assets/path.jpg"
+		},
+		{
+			"name": "i2_png",
+			"type": "image",
+			"url": "assets/i2.png"
+		},
+		{
+			"name": "i3_png",
+			"type": "image",
+			"url": "assets/i3.png"
+		},
+		{
+			"name": "i4_png",
+			"type": "image",
+			"url": "assets/i4.png"
+		},
+		{
+			"name": "i5_png",
+			"type": "image",
+			"url": "assets/i5.png"
+		},
+		{
+			"name": "i1_png",
+			"type": "image",
+			"url": "assets/i1.png"
 		}
 	]
 }

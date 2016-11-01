@@ -102,9 +102,11 @@ var mapJason = [
 ];
 var ROW = 10;
 var LIST = 10;
-var STONEPROBBILITY = 0.3;
+var STONEPROBBILITY = 0.1;
 var ONETILESIZE = 64;
 var manhadun = 0;
+var ojilide = 1;
+var duijiaoxian = 2;
 var tile = (function (_super) {
     __extends(tile, _super);
     function tile() {
@@ -175,8 +177,15 @@ var MainMap = (function (_super) {
         }
     };
     p.estimulate = function (start, end, method) {
-        if (method == 0)
+        if (method == 0) {
             return Math.abs(end.x / ONETILESIZE - start.x / ONETILESIZE) + Math.abs(end.y / ONETILESIZE - start.y / ONETILESIZE);
+        }
+        if (method == 1) {
+            return Math.sqrt((start.x - end.x) * (start.x - end.x) + (start.y - end.y) * (start.y - end.y));
+        }
+        if (method == 2) {
+            return Math.sqrt((start.x - Math.abs(end.x - start.x) / 2) * (start.x - Math.abs(end.x - start.x) / 2) + (start.y - end.y / 2) * (start.y - end.y / 2)) + Math.abs(end.x - start.x) / 2;
+        }
     };
     p.sortWeight = function (a, b) {
         return a.weight - b.weight;
@@ -247,7 +256,7 @@ var MainMap = (function (_super) {
                         dg = 1.4;
                     }
                     var testTile = this.myMap[(j / ONETILESIZE) * ROW + i / ONETILESIZE];
-                    console.log("当前判断砖块坐标：" + "(" + i / ONETILESIZE + "," + j / ONETILESIZE + ")");
+                    // console.log("当前判断砖块坐标：" + "(" + i / ONETILESIZE + "," + j / ONETILESIZE + ")");
                     //判断是否为当前地面
                     if (testTile == currentTile) {
                         continue;
@@ -265,8 +274,8 @@ var MainMap = (function (_super) {
                         }
                         else if (openList.indexOf(testTile) == -1 && closedList.indexOf(testTile) == -1) {
                             tempOpenList.push(testTile);
-                            console.log("openlist +" + "(" + testTile.x + "," + testTile.y + ")");
-                            testTile.weight = currentTile.weight + dg + this.estimulate(testTile, endTile, manhadun);
+                            // console.log("openlist +"+"("+testTile.x+","+testTile.y+")");
+                            testTile.weight = currentTile.weight + dg + this.estimulate(testTile, endTile, ojilide);
                             testTile.preTile = currentTile;
                         }
                     }
@@ -278,7 +287,6 @@ var MainMap = (function (_super) {
                     openList[i] = openList[i + 1];
                 }
                 openList.pop();
-                console.log("openlist -" + "(" + currentTile.x + "," + currentTile.y + ")");
             }
             if (tempOpenList.length != 0) {
                 tempOpenList.sort(this.sortWeight);

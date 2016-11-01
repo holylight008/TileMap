@@ -6,7 +6,7 @@ var RIGHT = 0;
 var DOWN = 1;
 var LEFT = 2;
 var UP = 3;
-var offSetOfPlayer = 32; //人物相对一个格子的位移偏移量
+var offSetOfPlayer = 100; //人物相对一个格子的位移偏移量
 var MoveState = (function () {
     //constructor(player:Player,TargetX:number,TargetY:number){
     function MoveState(player, path) {
@@ -40,30 +40,9 @@ var MoveState = (function () {
         // egret.Tween.get(this.player).to({x:this.TargetX,y:this.TargetY},distance/this.player.volocity).call(()=>{
         //     this.player.Macine.ChangeState(new IdleState(this.player));
         // },this);
-        if (dy >= 0) {
-            if (Math.abs(dy) >= Math.abs(dx)) {
-                this.targetFace = this.currentFace;
-            }
-            else if (dx >= 0) {
-                this.targetFace = (this.currentFace + faceNumber - 1) % faceNumber;
-            }
-            else {
-                //console.log("!!!")
-                this.targetFace = (this.currentFace + 1) % faceNumber;
-            }
-        }
-        else {
-            if (Math.abs(dy) >= Math.abs(dx)) {
-                this.targetFace = (this.currentFace + 2) % faceNumber;
-            }
-            else if (dx >= 0) {
-                this.targetFace = (this.currentFace + faceNumber - 1) % faceNumber;
-            }
-            if (dx < 0) {
-                this.targetFace = (this.currentFace + 1) % faceNumber;
-            }
-        }
+        this.chooseFace(dx, dy);
         this.currentFace = this.targetFace;
+        console.log("第一次选择以后朝向：" + this.currentFace);
         //console.log("("+this.player.x+","+this.player.y+")"+"dy="+dy+"  dx="+dx+"  targetFace="+this.targetFace);
         egret.startTick(this.enter, this);
     };
@@ -95,7 +74,13 @@ var MoveState = (function () {
                 this.player.Macine.ChangeState(new IdleState(this.player));
             }
             else {
+                console.log("到达第" + this.targetTile + "块转时的朝向" + this.currentFace);
                 this.targetTile++;
+                var dx = this.path[this.targetTile].x - this.player.x;
+                var dy = this.path[this.targetTile].y - this.player.y;
+                this.chooseFace(dx, dy);
+                this.currentFace = this.targetFace;
+                console.log("目标为第" + this.targetTile + "块转时的朝向" + this.currentFace);
             }
         }
         return true;
@@ -104,6 +89,30 @@ var MoveState = (function () {
         egret.stopTick(this.enter, this);
         // egret.Tween.removeTweens(this.player);
         this.count = 0;
+    };
+    p.chooseFace = function (dx, dy) {
+        if (dy >= 0) {
+            if (Math.abs(dy) >= Math.abs(dx)) {
+                this.targetFace = 1;
+            }
+            else if (dx > 0) {
+                this.targetFace = 0;
+            }
+            else {
+                this.targetFace = 2;
+            }
+        }
+        else {
+            if (Math.abs(dy) >= Math.abs(dx)) {
+                this.targetFace = 3;
+            }
+            else if (dx >= 0) {
+                this.targetFace = 0;
+            }
+            if (dx < 0) {
+                this.targetFace = 2;
+            }
+        }
     };
     return MoveState;
 }());
@@ -167,7 +176,7 @@ var Player = (function (_super) {
         this.width = this.MyPlayer.width;
         this.height = this.MyPlayer.height;
         this.MyPlayer.x = 0;
-        this.MyPlayer.y = -50;
+        this.MyPlayer.y = -40;
     }
     var d = __define,c=Player,p=c.prototype;
     p.createBitmapByName = function (name) {
