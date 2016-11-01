@@ -112,9 +112,10 @@ let mapJason=[
 
 let ROW=10;
 let LIST=10;
-let LINKAREA=8;
+let STONEPROBBILITY=0.5;
 let ONETILESIZE=64;
 let manhadun=0;
+
 
 class tile extends egret.DisplayObjectContainer{
     constructor(){
@@ -124,7 +125,7 @@ class tile extends egret.DisplayObjectContainer{
         this.bitmap.y=0;
         this.addChild(this.bitmap);
 
-        this.weight=-1;
+        this.weight=0;
         this.preTile=null;
     }
     public walkAble:boolean;
@@ -136,16 +137,12 @@ class tile extends egret.DisplayObjectContainer{
 class MainMap extends egret.DisplayObjectContainer{
     private myMap:tile[];
     private objectOnMap:egret.DisplayObjectContainer[];
-    private closedList:tile[];
-    private openList:tile[];
     constructor(){
         super();
         this.myMap=new Array();
         this.objectOnMap=new Array();
-        this.openList=new Array();
-        this.closedList=new Array();
         for(let i=0;i<ROW*LIST;i++){
-            if(Math.random()<0.5){
+            if(Math.random()<=STONEPROBBILITY){
                 mapJason[i].walkAble=false;
             }else{
                 mapJason[i].walkAble=true;
@@ -192,66 +189,96 @@ class MainMap extends egret.DisplayObjectContainer{
 
     private estimulate(start:tile,end:tile,method:number):number{
         if (method == 0)
-            return Math.abs(end.x - start.x) + Math.abs(end.y - start.y);
+            return Math.abs(end.x / ONETILESIZE - start.x / ONETILESIZE) + Math.abs(end.y / ONETILESIZE - start.y / ONETILESIZE);
     }
     private sortWeight(a:tile,b:tile){
         return a.weight-b.weight;
     }
-    public findWay(startTile:tile,endTile:tile):boolean{
-        this.closedList.push(startTile);
-        for(let i=startTile.x-1;i<startTile.x+2;i++){
-            for(let j=startTile.y-1;j<startTile.y+2;j++){
-                if(i<0 || j<0){
-                    continue;
-                }
-                //计算G函数步进
-                let dg=1;
-                if((j==startTile.y-1 ||j==startTile.y+1) && (i==startTile.x-1 || i==startTile.x+1)){
-                    dg=1;
-                }else{
-                    dg=1.4;
-                }
-                let testTile:tile=new tile();
-                testTile= this.myMap[j*ROW+i];
-                console.log(j*ROW+i);
-                //判断是否为当前地面
-                if(i==startTile.x && j==startTile.y){
-                    continue;
-                }
-                //判断8向联通的地面是否可走，不可走则跳过此次判断
-                else if(testTile.walkAble==false){
-                    continue;
-                }
-                //判断是否在已考察序列
-                else if(this.closedList.indexOf(testTile)!=-1){
-                    //若通过starttileG函数权值更小，则更新G函数
-                    if(startTile.weight+dg<testTile.weight){
-                        testTile.weight=startTile.weight+dg;
-                        testTile.preTile=startTile;
+
+    public findWay(startTile: tile, endTile: tile): boolean {
+        startTile=this.myMap[startTile.y*ROW+startTile.x];
+        endTile=this.myMap[endTile.y*ROW+endTile.x];
+        if(endTile.walkAble==false){
+            console.log("("+endTile.x+","+endTile.y+")"+"不可达");
+            return false;
+        }
+        let currentTile: tile = startTile;
+        currentTile.weight=0;
+        let openList:tile[]=new Array();
+        let closedList:tile[]=new Array();
+        while (currentTile != endTile) {
+            closedList.push(currentTile);
+            let tempOpenList:tile[]=new Array();
+            for (let i = currentTile.x - 1*ONETILESIZE; i < currentTile.x + 2*ONETILESIZE; i+=ONETILESIZE) {
+                for (let j = currentTile.y - 1*ONETILESIZE; j < currentTile.y + 2*ONETILESIZE; j+=ONETILESIZE) {
+                    if (i < 0 || j < 0 || j>9*ONETILESIZE ||i>9*ONETILESIZE) {
+                        continue;
                     }
-                }
-                //判断是否在未考察序列
-                else if(this.openList.indexOf(testTile)!=-1){
-                    //testTile到达endtile，递归结束
-                    if(testTile.x==endTile.x && testTile.y==endTile.y){
-                        endTile.preTile=testTile;
-                        return true;
+                    //计算G函数步进
+                    let dg = 0;
+                    if ((i == currentTile.x - 1*ONETILESIZE && j == currentTile.y) || (i == currentTile.x + 1*ONETILESIZE && j == currentTile.y) || (i == currentTile.x && j == currentTile.y - 1*ONETILESIZE) || (i == currentTile.x && j == currentTile.y + 1*ONETILESIZE)) {
+                        dg = 1;
+                    } else {
+                        dg = 1.4;
                     }
-                    //计算testtile权值
-                    else{
-                        testTile.weight=startTile.weight+dg+this.estimulate(testTile,endTile,manhadun);
-                        testTile.preTile=startTile;
-                        this.openList.push(testTile);
+                    
+                    let testTile: tile = this.myMap[(j/ONETILESIZE) * ROW + i/ONETILESIZE];
+                    
+                    console.log("当前判断砖块坐标：" + "(" + i/ONETILESIZE + "," + j/ONETILESIZE + ")");
+                    //判断是否为当前地面
+                    if (i == currentTile.x && j == currentTile.y) {
+                        continue;
+                    }
+                    //判断8向联通的地面是否可走，不可走则跳过此次判断
+                    else if (testTile.walkAble == false) {
+                        continue;
+                    }
+                    //判断是否在未考察序列
+                    else if (testTile.walkAble) {
+                        //testTile到达endtile
+                        if (testTile== endTile) {
+                            endTile.preTile = testTile;
+                            console.log("("+endTile.x+","+endTile.y+")"+"已达到");
+                            return true;
+                        }
+                        //计算testtile权值
+                        else if (openList.indexOf(testTile) == -1 && closedList.indexOf(testTile)==-1) {
+                            tempOpenList.push(testTile);
+                            //console.log("openlist +"+"("+testTile.x+","+testTile.y+")");
+                            testTile.weight = currentTile.weight + dg + this.estimulate(testTile, endTile, manhadun);
+                            testTile.preTile = currentTile;
+                        }
                     }
                 }
             }
+            if (openList.indexOf(currentTile) != -1) {
+                let p=openList.indexOf(currentTile);
+                for(let i=p;i<openList.length-1;i++){
+                    openList[i]=openList[i+1];
+                }
+                openList.pop();
+                //console.log("openlist -"+"("+currentTile.x+","+currentTile.y+")");
+            }
+            if(tempOpenList.length!=0){
+                tempOpenList.sort(this.sortWeight);
+                currentTile = tempOpenList.shift();;
+                for(let i=0;i<tempOpenList.length;i++){
+                    openList.push(tempOpenList[i]);
+                }
+                console.log("此次判断最小权值：" + currentTile.weight);
+                console.log("此次选择点坐标：（"+currentTile.x+","+currentTile.y+")");
+            }
+            else if (openList.length != 0 ) {
+                openList.sort(this.sortWeight);
+                currentTile=openList[0];
+                console.log("当前点已经无路可走");
+                console.log("选择开放列表中的最小权值：" + currentTile.weight);
+                console.log("开放列表中选择点坐标：（"+currentTile.x+","+currentTile.y+")");
+            } else {
+                console.log("当前判断列表为空且开放列表为空，未找到路径")
+                return false;
+            }
         }
-        if(this.openList.indexOf(startTile)!=-1){
-            this.openList.splice(this.openList.indexOf(startTile));
-        }
-        this.openList.sort(this.sortWeight);
-        let minWeight:tile=this.openList[0];
-        console.log(minWeight.weight);
-        return this.findWay(minWeight,endTile);
+
     }
 }
